@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import MyK_means
-from MyK_means import txt2csv
+from MyK_means import txt2csv, drawCategoryFigure
 from Settings import *
 
 sns.set(style="darkgrid")
@@ -28,14 +28,12 @@ if datasetIndex == '1':
     print(df_iris.head())
     sns.pairplot(df_iris, hue="Species")  # https://zhuanlan.zhihu.com/p/98729226
     plt.show()
-    dataset = df_iris
     x = df_iris.iloc[:, [0, 1, 2, 3]].values  # Get the first four column's value(remember we delete the first column)
 elif datasetIndex == '2':
     df_sonar = pd.read_csv('sonar.csv', header=None)
     df_sonar.info()
     print(df_sonar.head())
     x = df_sonar.iloc[:, 0:60].values
-    dataset = df_sonar
 elif datasetIndex == '3':
     # change txt format to csv format
     txt2csv('Compound.txt', 'Compound.csv')
@@ -45,7 +43,6 @@ elif datasetIndex == '3':
     sns.pairplot(df_compound, hue="c")
     plt.show()
     x = df_compound.iloc[:, 0:2].values
-    dataset = df_compound
 else:
     txt2csv('threecircles.txt', 'threecircles.csv')
     df_threecircles = pd.read_csv('threecircles.csv', header=None, names=['a', 'b', 'c'])
@@ -54,16 +51,21 @@ else:
     sns.pairplot(df_threecircles, hue="c")
     plt.show()
     x = df_threecircles.iloc[:, 0:2].values
-    dataset = df_threecircles
 
 print("===========================================================================")
 kmeansKind = input("Which subLab do you want to test? (1)K-means (2)K-means++ (3)K-means with kernel function: ")
+kernelKind = ''
 if kmeansKind == '1':
     kmeansKind = 'kmeans'
 elif kmeansKind == '2':
     kmeansKind = 'kmeans++'
 else:
     kmeansKind = 'kmeans_kernel'
+    kernelKind = input("Which kind of kernel would you like? (1)gauss (2)linear: ")
+    if kernelKind == '1':
+        MyK_means.global_kernel_kind = 'gauss_kernel'
+    elif kernelKind == '2':
+        MyK_means.global_kernel_kind = 'linear_kernel'
 
 # for classification
 from sklearn.cluster import KMeans
@@ -71,6 +73,7 @@ from sklearn.cluster import KMeans
 wcss = []
 result = []
 results = []
+returnAllcenters = []
 
 # 1.use python library
 if use_python_library:
@@ -83,8 +86,9 @@ if use_python_library:
 else:
     for i in range(1, 11):
         kmeans = MyK_means.MyKMeans(i, 300, 10, kmeansKind)
-        result = kmeans.kMeans(x)
+        dataset, result, returnCenters = kmeans.kMeans(x)
         results.append(result)
+        returnAllcenters.append(returnCenters)
         print("inmain...", kmeans.inertia_)
         wcss.append(kmeans.inertia_)
 
@@ -120,3 +124,12 @@ if datasetIndex != '2':
             df_threecircles['result'] = results[int(clusterNum) - 1]
             sns.pairplot(df_threecircles, hue="result")
             plt.show()
+
+        if datasetIndex == '3' or datasetIndex == '4':
+            df_data = []
+            if datasetIndex == '3':
+                df_data = df_compound
+            else:
+                df_data = df_threecircles
+            drawCategoryFigure(results[int(clusterNum) - 1], dataset, returnAllcenters[int(clusterNum) - 1],
+                               3, df_data)

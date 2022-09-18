@@ -4,8 +4,48 @@ from math import sqrt, exp
 import csv
 import numpy as np
 import time
+import matplotlib.pyplot as plt
 from Settings import *
+
 finalCenters = []
+global_kernel_kind = 'linear_kernel'
+
+
+def drawCategoryFigure(results, dataset, centers, dimension=2, df_data=[]):
+    colors = ['r', 'g', 'b', 'y', 'c', 'm', 'k', 'w']
+    drawX = dataset[:, 0]
+    drawY = dataset[:, 1]
+    centerX = [x[0] for x in centers]
+    centerY = [x[1] for x in centers]
+    if dimension == 2:
+        fig = plt.figure()
+        ax = fig.subplots()
+        drawColors = []
+        for index in range(len(results)):
+            drawColors.append(colors[results[index]])
+        ax.scatter(drawX, drawY, c=drawColors, alpha=0.5)
+        if show_Kmeans_Center:
+            ax.scatter(centerX, centerY, c='black', alpha=1)
+        plt.title("cluster results:(centers are black)")
+        plt.show()
+    if dimension == 3:
+        ax2 = plt.axes(projection='3d')
+        drawZ = dataset[:, 2]
+        drawColors = []
+        dataColors = []
+        if show_Original_In_Higher_Dimension:
+            dataColors = df_data['c']
+        else:
+            for index in range(len(results)):
+                drawColors.append(colors[results[index]])
+        for i in range(0, len(dataColors)):
+            drawColors.append(colors[int(dataColors[i]) - 1])
+        centerZ = [x[2] for x in centers]
+        ax2.scatter3D(drawX, drawY, drawZ, c=drawColors, alpha=0.5)
+        if not show_Original_In_Higher_Dimension:
+            ax2.scatter3D(centerX, centerY, centerZ, c='black', alpha=1)
+        plt.title("cluster results in higher dimension")
+        plt.show()
 
 
 def txt2csv(txtfilename, csvfilename):
@@ -87,17 +127,27 @@ def generate_k_plus(dataset, k):
     return centers
 
 
-def gauss_kernal2_3(x1, x2, sigmoid):
-    exp1 = exp(-sigmoid*x1*x1)
-    exp2 = exp(-sigmoid*x2*x2)
-    a = exp1*exp2
-    b = 2*x1*x2*exp1*exp2
-    c = 2*x1*x1*x2*x2*exp1*exp2
+def make_kernel2_3(x1, x2, method):
+    # print("before----")
+    # print(x1, x2)
+    if method == 'linear_kernel':
+        a = x1 * x1
+        b = x2 * x2
+        c = sqrt(2) * x1 * x2
+    elif method == 'gauss_kernel':
+        sigmoid = gauss_kernel_sigmoid
+        exp1 = exp(-sigmoid * x1 * x1)
+        exp2 = exp(-sigmoid * x2 * x2)
+        a = exp1 * exp2
+        b = 2 * x1 * x2 * exp1 * exp2
+        c = 2 * x1 * x1 * x2 * x2 * exp1 * exp2
+
+    # print("after-----")
+    # print(a, b, c)
     return a, b, c
 
 
-def kernel_process(datas_list, sigmoid=0.5):
-    # Use Gaussian Kernel
+def kernel_process(datas_list, method):
     dimension = len(datas_list[0])
     newdatas_list = np.zeros((datas_list.shape[0], dimension + 1))
     length = len(datas_list)
@@ -106,9 +156,7 @@ def kernel_process(datas_list, sigmoid=0.5):
     # https://www.jianshu.com/p/c9825e9be248
     for index in range(0, length):
         tmpdata = datas_list[index]
-        a, b, c = gauss_kernal2_3(tmpdata[0], tmpdata[1], sigmoid)
-        sumval = a+b+c
-        #newdatas_list[index] = [a/sumval, b/sumval, c/sumval]
+        a, b, c = make_kernel2_3(tmpdata[0], tmpdata[1], method)
         newdatas_list[index] = [a, b, c]
     return newdatas_list
 
@@ -199,7 +247,7 @@ class MyKMeans(object):
         old_assignments = []
 
         if self.mode == "kmeans_kernel":
-            tmpdataset = kernel_process(dataset, 0.01)
+            tmpdataset = kernel_process(dataset, global_kernel_kind)
             dataset = tmpdataset
 
         while initnum < self.n_init:
@@ -229,6 +277,10 @@ class MyKMeans(object):
         self.inertia_ += sumDistance
         end = time.time()
         if show_Time_Use:
-            print("total category time is: ", end-start, "(s)")
+            print("total category time is: ", end - start, "(s)")
+        if show_Kmeans_Center:
+            returnCenters = finalCenters
+        else:
+            returnCenters = []
 
-        return assignments
+        return dataset, assignments, returnCenters
