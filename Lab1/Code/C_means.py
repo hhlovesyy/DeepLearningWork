@@ -131,5 +131,10 @@ if datasetIndex != '2':
                 df_data = df_compound
             else:
                 df_data = df_threecircles
-            drawCategoryFigure(results[int(clusterNum) - 1], dataset, returnAllcenters[int(clusterNum) - 1],
-                               3, df_data)
+
+            if kmeansKind == 'kmeans_kernel':
+                drawCategoryFigure(results[int(clusterNum) - 1], dataset, returnAllcenters[int(clusterNum) - 1], 3, df_data)
+            else:
+                drawCategoryFigure(results[int(clusterNum) - 1], dataset, returnAllcenters[int(clusterNum) - 1], 2, df_data)
+
+

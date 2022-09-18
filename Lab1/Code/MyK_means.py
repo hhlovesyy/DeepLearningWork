@@ -3,6 +3,7 @@ import random
 from math import sqrt, exp
 import csv
 import numpy as np
+from numpy import *
 import time
 import matplotlib.pyplot as plt
 from Settings import *
@@ -71,6 +72,18 @@ def distance(a, b):
     return sqrt(_sum)
 
 
+def Mahalanobis_Distance(x, i, j):
+    xT = x.T
+    D = np.cov(xT)
+    invD = np.linalg.inv(D)  # The inverse of the covariance
+    assert 0 <= i < x.shape[0], "point i out of range"
+    assert -1 <= j < x.shape[0], "point 2 out of range"
+    x_A = x[i]
+    x_B = x.mean(axis=0) if j == -1 else x[j]
+    tp = x_A - x_B
+    return np.sqrt(dot(dot(tp, invD), tp.T))
+
+
 # generate k cluster centers
 def generate_k(dataset, k):
     '''
@@ -92,7 +105,6 @@ def generate_k(dataset, k):
 
 def generate_k_plus(dataset, k):
     '''
-    find the minimum and maximum value of the dataset's each coordinate,then:
     1) generate a random point as the start point
     2) if a point has not be chosen, calculate the distance between it and the nearest chosen center
     3) chosen a new point as a new center, which the probability depends on the distance
@@ -109,7 +121,7 @@ def generate_k_plus(dataset, k):
             for _d in range(0, dimension):
                 center.append(random_point[_d])
         else:
-            # remember we need two values to accept the return value
+            # tip: remember we need two values to accept the return value
             assignments, _IdontCare = assign_points(dataset, centers)
             distances = []
             probabilities = []
@@ -274,7 +286,8 @@ class MyKMeans(object):
         # https://www.runoob.com/python/python-func-zip.html
         if show_Iter_Num:
             print("the number of iternum is: ", iternum)
-        self.inertia_ += sumDistance
+
+        self.inertia_ = sumDistance  # fix bug #20220918_1345
         end = time.time()
         if show_Time_Use:
             print("total category time is: ", end - start, "(s)")

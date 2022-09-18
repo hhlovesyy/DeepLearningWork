@@ -7,4 +7,5 @@ show_Kmeans_Center = True  # only supports the last 2 dataset, because others ar
 show_Original_In_Higher_Dimension = True
 use_python_library = False
 gauss_kernel_sigmoid = 0.001
+use_Mahalanobis_Distance = True
 
