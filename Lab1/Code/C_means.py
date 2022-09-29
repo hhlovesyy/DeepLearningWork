@@ -8,6 +8,7 @@ import seaborn as sns
 import MyK_means
 from MyK_means import txt2csv, drawCategoryFigure
 from Settings import *
+from sklearn import preprocessing
 
 sns.set(style="darkgrid")
 
@@ -52,6 +53,9 @@ else:
     plt.show()
     x = df_threecircles.iloc[:, 0:2].values
 
+# normalize(z_score), this is really important!
+Model = preprocessing.StandardScaler()
+x = Model.fit_transform(x)
 print("===========================================================================")
 kmeansKind = input("Which subLab do you want to test? (1)K-means (2)K-means++ (3)K-means with kernel function: ")
 kernelKind = ''

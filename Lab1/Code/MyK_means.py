@@ -7,6 +7,7 @@ from numpy import *
 import time
 import matplotlib.pyplot as plt
 from Settings import *
+import scipy
 
 finalCenters = []
 global_kernel_kind = 'linear_kernel'
@@ -18,7 +19,7 @@ def drawCategoryFigure(results, dataset, centers, dimension=2, df_data=[]):
     drawY = dataset[:, 1]
     centerX = [x[0] for x in centers]
     centerY = [x[1] for x in centers]
-    if dimension == 2:
+    if dimension == 2 or use_kernel_function_without_raising_dimension:
         fig = plt.figure()
         ax = fig.subplots()
         drawColors = []
@@ -29,7 +30,7 @@ def drawCategoryFigure(results, dataset, centers, dimension=2, df_data=[]):
             ax.scatter(centerX, centerY, c='black', alpha=1)
         plt.title("cluster results:(centers are black)")
         plt.show()
-    if dimension == 3:
+    elif dimension == 3:
         ax2 = plt.axes(projection='3d')
         drawZ = dataset[:, 2]
         drawColors = []
@@ -72,16 +73,15 @@ def distance(a, b):
     return sqrt(_sum)
 
 
-def Mahalanobis_Distance(x, i, j):
+def Mahalanobis_Distance(x, x_i, x_j):
     xT = x.T
     D = np.cov(xT)
     invD = np.linalg.inv(D)  # The inverse of the covariance
-    assert 0 <= i < x.shape[0], "point i out of range"
-    assert -1 <= j < x.shape[0], "point 2 out of range"
-    x_A = x[i]
-    x_B = x.mean(axis=0) if j == -1 else x[j]
-    tp = x_A - x_B
-    return np.sqrt(dot(dot(tp, invD), tp.T))
+    if use_python_library:
+        return scipy.spatial.distance.mahalanobis(x_i, x_j, invD)
+    else:
+        tp = x_i - x_j
+        return np.sqrt(np.dot(np.dot(tp.T, invD), tp))
 
 
 # generate k cluster centers
@@ -126,9 +126,15 @@ def generate_k_plus(dataset, k):
             distances = []
             probabilities = []
             sum_distance = 0
+            # https://blog.csdn.net/yuzhihuan1224/article/details/100977580
+            xMat = np.vstack((dataset, np.array(centers)))  # put 2 np.arrays together, for mahalanobis distance
 
             for assignment, point in zip(assignments, dataset):
                 curDistance = distance(point, centers[assignment])
+                if use_Mahalanobis_Distance:
+                    curDistance = Mahalanobis_Distance(xMat, point, centers[assignment])
+                if use_kernel_function_without_raising_dimension:
+                    curDistance = gauss_kernel_distance(point, centers[assignment])
                 distances.append(curDistance)
                 sum_distance += curDistance
             for dis in distances:
@@ -140,8 +146,6 @@ def generate_k_plus(dataset, k):
 
 
 def make_kernel2_3(x1, x2, method):
-    # print("before----")
-    # print(x1, x2)
     if method == 'linear_kernel':
         a = x1 * x1
         b = x2 * x2
@@ -153,10 +157,21 @@ def make_kernel2_3(x1, x2, method):
         a = exp1 * exp2
         b = 2 * x1 * x2 * exp1 * exp2
         c = 2 * x1 * x1 * x2 * x2 * exp1 * exp2
-
-    # print("after-----")
-    # print(a, b, c)
     return a, b, c
+
+
+def gauss_kernel_function(x1, x2):
+    sigmoid = gauss_kernel_sigmoid
+    dist = distance(x1, x2)
+    res = exp(-dist*dist/(2*sigmoid*sigmoid))
+    return res
+
+
+def gauss_kernel_distance(x1, x2):
+    sum1 = gauss_kernel_function(x1, x1)
+    sum2 = gauss_kernel_function(x1, x2)
+    sum3 = gauss_kernel_function(x2, x2)
+    return sqrt(sum1-2*sum2+sum3)
 
 
 def kernel_process(datas_list, method):
@@ -192,6 +207,8 @@ def rate_random(datas_list, rates_list):
 def assign_points(data_points, centers):
     assignments = []
     sumDistance = 0
+    # https://blog.csdn.net/yuzhihuan1224/article/details/100977580
+    xMat = np.vstack((data_points, np.array(centers)))  # put 2 np.arrays together, for mahalanobis distance
     for point in data_points:
         shortest = float('inf')  # positive infinity
         shortest_index = 0
@@ -199,6 +216,10 @@ def assign_points(data_points, centers):
         # find the shortest result and mark cur point with the center's index
         for i in range(len(centers)):
             val = distance(point, centers[i])
+            if use_Mahalanobis_Distance:
+                val = Mahalanobis_Distance(xMat, point, centers[i])
+            if use_kernel_function_without_raising_dimension:
+                val = gauss_kernel_distance(point, centers[i])
             if val < shortest:
                 shortest = val
                 shortest_index = i
@@ -207,7 +228,13 @@ def assign_points(data_points, centers):
     # calculate the sumDistance
     tempZip = zip(assignments, data_points)
     for assignment, data_point in tempZip:
-        sumDistance += distance(data_point, centers[assignment])
+        if use_Mahalanobis_Distance:
+            sumDistance += Mahalanobis_Distance(xMat, data_point, centers[assignment])
+        elif use_kernel_function_without_raising_dimension:
+            sumDistance += gauss_kernel_distance(data_point, centers[assignment])
+        else:
+            sumDistance += distance(data_point, centers[assignment])
+
     return assignments, sumDistance
 
 
@@ -259,8 +286,9 @@ class MyKMeans(object):
         old_assignments = []
 
         if self.mode == "kmeans_kernel":
-            tmpdataset = kernel_process(dataset, global_kernel_kind)
-            dataset = tmpdataset
+            if not use_kernel_function_without_raising_dimension:
+                tmpdataset = kernel_process(dataset, global_kernel_kind)
+                dataset = tmpdataset
 
         while initnum < self.n_init:
             if self.mode == "kmeans":
@@ -268,7 +296,7 @@ class MyKMeans(object):
             elif self.mode == "kmeans++":
                 k_points = generate_k_plus(dataset, self.n_clusters)
             elif self.mode == "kmeans_kernel":
-                k_points = generate_k_plus(dataset, self.n_clusters)
+                k_points = generate_k(dataset, self.n_clusters)
             calAssignments, sumDistance = assign_points(dataset, k_points)
             if sumDistance < minDis:
                 minDis = sumDistance
@@ -288,6 +316,8 @@ class MyKMeans(object):
             print("the number of iternum is: ", iternum)
 
         self.inertia_ = sumDistance  # fix bug #20220918_1345
+        if Only_Calculate_The_first_Centers_Choose:
+            self.inertia_ = minDis
         end = time.time()
         if show_Time_Use:
             print("total category time is: ", end - start, "(s)")
