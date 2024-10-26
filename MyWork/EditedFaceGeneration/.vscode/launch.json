@@ -1,0 +1,81 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Current File with Arguments",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            // "args": [
+            //     "--stage",
+            //     "coarse geometry generation",
+            //     "--text",
+            //     "a zoomed out DSLR photo of Emma Watson",
+            //     "--exp_root",
+            //     "exp",
+            //     "--exp_name",
+            //     "demo",
+            //     "--total_steps",
+            //     "201",
+            //     "--save_freq",
+            //     "40",
+            //     "--sds_input",
+            //     "norm grey-rendered",
+            //     "--texture_generation",
+            //     "direct"
+            // ],
+            "args" :[
+                "--stage",
+                "edit",
+                "--text",
+                "let her wear batman eyemask",
+                "--edit_scope",
+                "tex",
+                "--exp_root",
+                "exp",
+                "--exp_name",
+                "demo",
+                "--total_steps",
+                "201",
+                "--save_freq",
+                "50",
+                "--sds_input",
+                "rendered",
+                "--vis_att",
+                "True",
+                "--texture_generation",
+                "latent",
+                "--latent_sds_steps",
+                "0",
+                "--attention_reg_diffuse",
+                "True",
+                "--attention_sds",
+                "True",
+                "--w_reg_diffuse",
+                "15000",
+                "--edit_prompt_cfg",
+                "15",
+                "--edit_img_cfg",
+                "2",
+                "--w_texSD",
+                "0.5",
+                "--w_texYuv",
+                "1",
+                "--load_id_path",
+                "./exp/demo/a zoomed out DSLR photo of Emma Watson/coarse geometry generation/seed42/200_coeff.npy",
+                "--load_diffuse_path",
+                "./exp/demo/a zoomed out DSLR photo of Emma Watson/texture generation/seed42/latent/400_diffuse_latent.npy"
+            ],
+            "env": {
+                "HF_ENDPOINT": "https://hf-mirror.com",
+                "HF_HOME": "/sys/fs/cgroup/huggingface",
+            },
+            //current working directory
+            "cwd": "/root/FaceGeneration/FaceG2E",
+        }
+    ]
+}
