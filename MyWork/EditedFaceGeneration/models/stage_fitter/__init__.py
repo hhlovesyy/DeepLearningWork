@@ -119,6 +119,10 @@ class StageFitter(object):
                 self.optim_param = [self.diffuse_latent]
             elif self.edit_scope == 'geo':
                 self.optim_param = [self.id_para]
+            elif self.edit_scope == 'deformation':
+                self.optim_param = [self.deformation_para]
+            elif self.edit_scope == 'displacement':
+                self.optim_param = [self.dp_tensor]
         
         if self.stage == 'displacement map':  
             self.optim_param = [self.dp_tensor]
@@ -127,8 +131,10 @@ class StageFitter(object):
                
     def get_parameters(self):
         if self.stage in ['texture generation','edit'] and self.diffuse_generation_type == 'mlp':
+            print("get parameters from diffuse mlp")
             return self.diffuse_mlp.parameters()
         else:
+            print("get parameters from self.optim_param")
             return self.optim_param
         
     def to(self,device):

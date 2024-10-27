@@ -10,7 +10,7 @@ use_controlnet_for_deformation = False
 
 deformation_map_resolution = 64
 save_deformation_map_for_test = True
-deformation_scale = 0.01
+deformation_scale = 0.005
 
 test_fileroot = 'Zuckerberg'
 fix_view = True

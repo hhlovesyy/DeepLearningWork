@@ -55,6 +55,20 @@ def update_shape(self):
     print("now in ourself update_shape")
     output_coeff = self.concat_coeff()
     self.predict_dp()
+    # 2024.10.27 新增与edit有关的逻辑
+    if self.stage == 'edit':
+        if self.edit_scope == 'deformation':
+            self.pred_vertex, self.pred_vertex_norm = \
+            self.facemodel.compute_for_render_with_deform_map(output_coeff,self.deformation_map,use_external_exp=False)
+        elif self.edit_scope == 'displacement':
+            self.pred_vertex, self.pred_vertex_norm = \
+            self.facemodel.compute_for_render_with_dp_map(output_coeff,self.dp_map,use_external_exp=False)    # torch.Size([1, 20481, 3])
+        elif self.edit_scope == 'geo' or self.edit_scope == 'tex':
+            self.pred_vertex, self.pred_vertex_norm = \
+            self.facemodel.compute_for_render_with_dp_map(output_coeff,self.dp_map,use_external_exp=False)    # torch.Size([1, 20481, 3])
+        self.pred_vertex_no_pose = self.pred_vertex.clone()
+        return
+
     if self.stage != 'coarse geometry generation' and self.stage!='deformation map':
         self.pred_vertex, self.pred_vertex_norm = \
             self.facemodel.compute_for_render_with_dp_map(output_coeff,self.dp_map,use_external_exp=False)    # torch.Size([1, 20481, 3])

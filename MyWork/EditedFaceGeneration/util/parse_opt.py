@@ -51,7 +51,7 @@ def parse_args():
     # edit settings
     parser.add_argument('--edit_prompt_cfg',type=float,default=100)
     parser.add_argument('--edit_img_cfg',type=float,default=20)
-    parser.add_argument('--edit_scope',type=str,choices=['tex','geo'],default='tex')
+    parser.add_argument('--edit_scope',type=str,choices=['tex','geo', 'deformation', 'displacement'],default='tex')
 
 
     # guidance settings

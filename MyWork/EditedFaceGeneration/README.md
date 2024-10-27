@@ -2,7 +2,18 @@
 
 refs:https://github.com/JiejiangWu/FaceG2E/tree/main?tab=readme-ov-file
 
+# Update 2024.10.27
 
+`test_edit_deform.sh`:编辑阶段单独优化deformation map的示例脚本，修改`editing_target='deformation'`字段为`editing_target='displacement'`可以单独优化displacement map。现在的逻辑是使用`demo_geometry_generation.sh`先生成3DMM的mesh，然后用`demo_texture_generation.sh`生成对应的基础albedo 贴图，接下来进行编辑，在编辑的时候有尝试过先编辑texture，然后编辑deformation/displacement，或者是直接单独编辑deformation/displacement，生成的deformation map和displacement map依旧效果非常差，**基本还是全噪声。**
+
+部分猜测的原因：
+
+- （1）InstructP2P每次生成的细节不一致，导致没法学到一致的信息；
+- （2）SDS计算完损失之后梯度下降，displacement map和deformation map的梯度下降逻辑需要自己写么（现在只是加入到了优化参数当中，但毕竟是对mesh顶点坐标xyz做偏移，或者对法线做偏移，这个过程是可导的么）？需要的话这个要怎么写？
+
+
+
+# Update 2024.10.26
 
 `demo_geometry_generation.sh`：优化3DMM生成Mesh的脚本；
 

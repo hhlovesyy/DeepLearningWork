@@ -154,7 +154,7 @@ class StableDiffusion_instructp2p(nn.Module):
         self.max_step = int(self.num_train_timesteps * 0.98)
         self.alphas = self.scheduler.alphas_cumprod.to(self.device) # for convenience
 
-        print(f'[INFO] loaded stable diffusion!')
+        print(f'[INFO] loaded InstructP2P!')
 
     def get_text_embeds_for_instructp2p(self, prompt, negative_prompt):
         # prompt, negative_prompt: [str]
